@@ -15,36 +15,71 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2. Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      # 3. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
+      # 4. Check Main Dart File
       - name: Check Main Dart File
         run: test -f lib/main.dart
 
+      # 5. Create Android Project
       - name: Create Android Project
-        run: flutter create --project-name crix_sports --platforms=android --org com.crixsports .
+        run: |
+          flutter create \
+            --project-name crix_sports \
+            --platforms=android \
+            --org com.crixsports .
 
+      # 6. Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release
+      # 7. Setup Gradle Cache
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
+      # 8. Check Flutter
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      # 9. Build APK with Retry
+      - name: Build Release APK
+        run: |
+          for attempt in 1 2 3; do
+            echo "CRIX SPORTS Build Attempt $attempt"
+
+            if flutter build apk --release; then
+              echo "APK BUILD SUCCESSFUL"
+              exit 0
+            fi
+
+            echo "Build failed. Waiting 30 seconds..."
+            sleep 30
+          done
+
+          echo "All build attempts failed."
+          exit 1
+
+      # 10. Upload APK
       - name: Upload CRIX SPORTS APK
         uses: actions/upload-artifact@v4
         with:
           name: CRIX-SPORTS-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+          retention-days: 7
