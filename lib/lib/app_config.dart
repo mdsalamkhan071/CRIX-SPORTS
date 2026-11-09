@@ -4,5 +4,5 @@ class AppConfig {
       'https://afbwohxzadtteoqfwolj.supabase.co';
 
   static const String supabasePublishableKey =
-      'sb_publishable__wUgkYFLU3Sk6Mo5zYMnjQ_XMhZFD4y';
+      'PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE';
 }
