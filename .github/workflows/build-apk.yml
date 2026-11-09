@@ -15,29 +15,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # 3. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
-      # 4. Check Main Dart File
-      - name: Check Main Dart File
-        run: test -f lib/main.dart
+      - name: Check Required Files
+        run: |
+          test -f lib/main.dart
+          test -f lib/app_config.dart
+          test -f app_icon.png
 
-      # 5. Create Android Project
       - name: Create Android Project
         run: |
           flutter create \
@@ -45,37 +43,29 @@ jobs:
             --platforms=android \
             --org com.crixsports .
 
-      # 6. Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # 7. Setup Gradle Cache
+      - name: Generate CRIX SPORTS App Icon
+        run: dart run flutter_launcher_icons
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # 8. Check Flutter
       - name: Flutter Doctor
         run: flutter doctor -v
 
-      # 9. Build APK with Retry
       - name: Build Release APK
         run: |
           for attempt in 1 2 3; do
-            echo "CRIX SPORTS Build Attempt $attempt"
-
+            echo "Build Attempt $attempt"
             if flutter build apk --release; then
-              echo "APK BUILD SUCCESSFUL"
               exit 0
             fi
-
-            echo "Build failed. Waiting 30 seconds..."
             sleep 30
           done
-
-          echo "All build attempts failed."
           exit 1
 
-      # 10. Upload APK
       - name: Upload CRIX SPORTS APK
         uses: actions/upload-artifact@v4
         with:
